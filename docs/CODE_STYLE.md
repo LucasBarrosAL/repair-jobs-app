@@ -69,6 +69,20 @@ const todos = useQuery({
 })
 ```
 
+## Commits
+
+Write every commit message in [Conventional Commits](https://www.conventionalcommits.org/) form:
+
+```text
+<type>(<scope>): <description>
+```
+
+Use a type such as `feat`, `fix`, `docs`, `test`, `refactor`, or `chore`. The scope is the area, such as `auth` or `jobs`. The description is a short imperative sentence. Add a body only when the subject line is not enough.
+
+```text
+feat(jobs): show the creation date on each row
+```
+
 ## StyleSheet
 
 - Style components with `StyleSheet.create`.
