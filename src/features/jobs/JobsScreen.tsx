@@ -2,13 +2,15 @@ import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { jobsForClient } from '@/domain/jobs'
+import { Button } from '@/components/Button'
+import { jobsForClient, jobsForPro } from '@/domain/jobs'
 import { useAppStore } from '@/store/appStore'
 import { useHasHydrated } from '@/store/useHasHydrated'
 import { theme } from '@/theme/tokens'
 import { EmptyJobs } from '@/features/jobs/EmptyJobs'
 import { JobListSkeleton } from '@/features/jobs/JobListSkeleton'
 import { JobRow } from '@/features/jobs/JobRow'
+import { useRemoteTodos } from '@/features/jobs/useRemoteTodos'
 
 export function JobsScreen() {
   const session = useAppStore((state) => state.session)
@@ -16,7 +18,14 @@ export function JobsScreen() {
   const logout = useAppStore((state) => state.logout)
   const hydrated = useHasHydrated()
   const router = useRouter()
-  const visibleJobs = session?.role === 'client' ? jobsForClient(jobs, session.username) : []
+  const isPro = session?.role === 'pro'
+  const todosQuery = useRemoteTodos(isPro)
+  const visibleJobs = !session
+    ? []
+    : session.role === 'client'
+      ? jobsForClient(jobs, session.username)
+      : jobsForPro(jobs, todosQuery.data ?? [], session.username)
+  const showSkeleton = !hydrated || (isPro && todosQuery.isLoading)
 
   function onLogout() {
     logout()
@@ -45,7 +54,15 @@ export function JobsScreen() {
           </Pressable>
         </View>
       </View>
-      {hydrated ? (
+      {isPro && todosQuery.isError ? (
+        <View style={styles.banner}>
+          <Text style={styles.bannerText}>{"Couldn't load available jobs."}</Text>
+          <Button label="Retry" onPress={() => void todosQuery.refetch()} />
+        </View>
+      ) : null}
+      {showSkeleton ? (
+        <JobListSkeleton />
+      ) : (
         <FlatList
           data={visibleJobs}
           keyExtractor={(job) => job.id}
@@ -53,8 +70,6 @@ export function JobsScreen() {
           ListEmptyComponent={session ? <EmptyJobs role={session.role} /> : null}
           contentContainerStyle={visibleJobs.length === 0 ? styles.emptyList : styles.list}
         />
-      ) : (
-        <JobListSkeleton />
       )}
     </SafeAreaView>
   )
@@ -104,5 +119,13 @@ const styles = StyleSheet.create({
   },
   emptyList: {
     flexGrow: 1,
+  },
+  banner: {
+    gap: theme.space.sm,
+  },
+  bannerText: {
+    color: theme.color.errorText,
+    fontSize: theme.font.body.fontSize,
+    lineHeight: theme.font.body.lineHeight,
   },
 })

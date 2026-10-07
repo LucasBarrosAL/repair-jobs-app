@@ -1,3 +1,3 @@
 export function createLocalId(): string {
-  return `local_${new Date().getTime()}`;
+  return `local_${Date.now()}`
 }

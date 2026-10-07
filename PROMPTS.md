@@ -186,3 +186,9 @@ Organize `DEVELOPMENT_PLAN.md` in phases. Each phase needs:
 Use the guides as the first phase’s output (they are created in this planning step; later phases follow them). Put FlashList infinite scroll and the EAS preview build for Android and iOS in a final optional phase, so they can be dropped if time runs out.
 
 Keep UI proposals labeled as proposals until I accept them. After I confirm any remaining open point, update `DEVELOPMENT_PLAN.md` so it contains only decided behavior and an implementation agent can execute it.
+
+## Implementation prompts
+
+### Phase 5
+
+Lets move on to Phase 5

@@ -6,9 +6,11 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button } from '@/components/Button'
 import { StatusTag } from '@/components/StatusTag'
 import { formatCreatedAt } from '@/domain/createdAt'
-import { jobsForClient } from '@/domain/jobs'
+import { jobsForClient, jobsForPro } from '@/domain/jobs'
+import type { DummyTodo, Job, Session } from '@/domain/types'
 import { useAppStore } from '@/store/appStore'
 import { theme } from '@/theme/tokens'
+import { useRemoteTodos } from '@/features/jobs/useRemoteTodos'
 
 export function JobDetailsScreen() {
   const params = useLocalSearchParams<{ id: string }>()
@@ -16,10 +18,27 @@ export function JobDetailsScreen() {
   const session = useAppStore((state) => state.session)
   const jobs = useAppStore((state) => state.jobs)
   const deleteJob = useAppStore((state) => state.deleteJob)
+  const claimJob = useAppStore((state) => state.claimJob)
+  const completeJob = useAppStore((state) => state.completeJob)
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
-  const job =
-    session?.role === 'client' ? jobsForClient(jobs, session.username).find((item) => item.id === jobId) : undefined
+  const todosQuery = useRemoteTodos(session?.role === 'pro')
+  const job = visibleJob(jobs, todosQuery.data ?? [], session, jobId)
+
+  function onClaim() {
+    if (!job) {
+      return
+    }
+    const todo = todosQuery.data?.find((item) => `remote_${item.id}` === job.id) ?? null
+    claimJob(job.id, todo)
+  }
+
+  function onComplete() {
+    if (!job) {
+      return
+    }
+    completeJob(job.id)
+  }
 
   function onDelete() {
     if (!job) {
@@ -59,11 +78,43 @@ export function JobDetailsScreen() {
         <Text style={styles.body}>{formatCreatedAt(job.createdAt)}</Text>
       </View>
       <View style={styles.actions}>
-        <Button label="Delete" variant="destructive" onPress={onDelete} />
+        {session?.role === 'pro' ? (
+          <>
+            <Button label="Claim" onPress={onClaim} disabled={job.status !== 'open'} />
+            <Button
+              label="Mark as completed"
+              onPress={onComplete}
+              disabled={job.status !== 'claimed' || job.claimedBy !== session.username}
+            />
+          </>
+        ) : (
+          <Button label="Delete" variant="destructive" onPress={onDelete} />
+        )}
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </View>
     </SafeAreaView>
   )
+}
+
+function visibleJob(
+  jobs: Job[],
+  todos: DummyTodo[],
+  session: Session | null,
+  jobId: string | undefined,
+): Job | undefined {
+  if (!session || !jobId) {
+    return undefined
+  }
+  if (session.role === 'client') {
+    return jobsForClient(jobs, session.username).find((item) => item.id === jobId)
+  }
+
+  const listed = jobsForPro(jobs, todos, session.username).find((item) => item.id === jobId)
+  if (listed) {
+    return listed
+  }
+
+  return jobs.find((item) => item.id === jobId && item.claimedBy === session.username && item.status === 'completed')
 }
 
 const styles = StyleSheet.create({

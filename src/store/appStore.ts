@@ -3,9 +3,9 @@ import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { login as loginAccount, logout as clearSession } from '@/domain/auth'
 import { createLocalId } from '@/domain/ids'
-import { createJob as makeJob, deleteJob as removeJob } from '@/domain/jobs'
+import { claimJob as claimStoredJob, completeJob as completeStoredJob, createJob as makeJob, deleteJob as removeJob } from '@/domain/jobs'
 import type { CreateJobResult } from '@/domain/jobs'
-import type { Account, Job, Role, Session } from '@/domain/types'
+import type { Account, DummyTodo, Job, Role, Session } from '@/domain/types'
 
 export const persistKey = 'repair-jobs.v1'
 
@@ -17,6 +17,8 @@ export type AppState = {
   logout: () => void
   createJob: (title: string, description: string) => CreateJobResult
   deleteJob: (id: string) => { ok: true } | { ok: false; message: string }
+  claimJob: (id: string, todo: DummyTodo | null) => void
+  completeJob: (id: string) => void
 }
 
 export const initialAppState = {
@@ -59,6 +61,20 @@ export const useAppStore = create<AppState>()(
         }
         set({ jobs: result.jobs })
         return { ok: true }
+      },
+      claimJob: (id, todo) => {
+        const session = get().session
+        if (!session) {
+          return
+        }
+        set({ jobs: claimStoredJob(get().jobs, id, session.username, todo) })
+      },
+      completeJob: (id) => {
+        const session = get().session
+        if (!session) {
+          return
+        }
+        set({ jobs: completeStoredJob(get().jobs, id, session.username) })
       },
     }),
     {

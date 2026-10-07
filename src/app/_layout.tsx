@@ -1,5 +1,6 @@
-import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { focusManager, QueryClient, QueryClientContext, QueryClientProvider } from '@tanstack/react-query'
 import { Stack } from 'expo-router'
+import { useContext } from 'react'
 import { AppState } from 'react-native'
 import type { AppStateStatus } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
@@ -25,13 +26,18 @@ const queryClient = new QueryClient({
 })
 
 export default function RootLayout() {
-  return (
+  const parentClient = useContext(QueryClientContext)
+  const content = (
     <SafeAreaProvider>
-      <QueryClientProvider client={queryClient}>
-        <SessionGate>
-          <Stack screenOptions={{ headerShown: false }} />
-        </SessionGate>
-      </QueryClientProvider>
+      <SessionGate>
+        <Stack screenOptions={{ headerShown: false }} />
+      </SessionGate>
     </SafeAreaProvider>
   )
+
+  if (parentClient) {
+    return content
+  }
+
+  return <QueryClientProvider client={queryClient}>{content}</QueryClientProvider>
 }

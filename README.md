@@ -1,23 +1,39 @@
 # Repair Jobs
 
-A phone app where a client posts repair jobs and deletes one only when nobody has claimed it.
+Clients post repair jobs on this phone. Pros claim open jobs and mark them finished. Accounts and jobs stay on the device. Pros also see a read-only list of extra jobs from DummyJSON.
 
-## Run the client path
+## Run
 
 ```sh
 npm install
 npx expo start
 ```
 
-Open the project in Expo Go. Sign in with any username and leave the role on Client. Press Continue, then the add button. A title is required. An empty description is allowed. The new job shows up on Jobs with an `open` tag and the time it was created.
+Open the project in Expo Go.
 
-Open a row for the description, the assignee, and the posted time. Delete removes an unclaimed job and returns to the list. If someone has claimed it, the job stays and the screen explains why.
+1. Sign in as a Client, create a job, and open it.
+2. Delete an unclaimed job to return to the list. Delete a claimed or finished job to see why it stays.
+3. Log out, sign in as a Pro, and claim an open job. Mark it completed. It leaves the Pro list and stays stored.
+4. Log out, sign in as the Client, and open that finished job. Delete explains that it was claimed.
+
+DummyJSON has to be reachable for the extra Pro jobs. If that request fails, the local jobs still show, with a button to try again.
 
 ## Libraries
 
-- Expo Router for screens
-- Zustand and AsyncStorage for the session, accounts, and jobs on this device
-- TanStack Query for remote reads, wired up and used when Pros load jobs
-- Ionicons for the create button
+- Expo Router keeps each screen a file and presents Create as a modal.
+- Zustand stores the session, accounts, and jobs. AsyncStorage keeps that store across restarts. Screens do not talk to AsyncStorage themselves.
+- TanStack Query loads the DummyJSON todos into a memory-only cache. Claiming a todo copies it into the Zustand store, and that copy is the saved job.
+- Ionicons supplies the create button.
 
-Product rules, copy, and the phase order are in [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md).
+## Assumptions
+
+- One device. There is no account server and no sync.
+- DummyJSON is read-only. The app never posts a job back to it.
+- A remote todo's title is the todo text. The other fields are stable mock values from the todo id, so a restart shows the same job.
+- Finished jobs stay stored. This app has no History screen.
+
+## With more time
+
+Page the Pro's remote jobs with FlashList, and add an EAS preview build for Android and iOS. Those steps are optional and are not part of this build.
+
+Product rules are in [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md).

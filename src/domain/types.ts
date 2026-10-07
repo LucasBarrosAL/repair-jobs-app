@@ -21,3 +21,10 @@ export type Job = {
   claimedBy: string | null
   createdAt: string
 }
+
+export type DummyTodo = {
+  id: number
+  todo: string
+  completed: boolean
+  userId: number
+}

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { screen, userEvent } from '@testing-library/react-native'
-import type { Job } from '@/domain/types'
+import type { DummyTodo, Job } from '@/domain/types'
 import { initialAppState, useAppStore } from '@/store/appStore'
 import { renderApp } from '@/test/renderApp'
 
@@ -20,17 +20,30 @@ function makeJob(overrides: Partial<Job> = {}): Job {
   }
 }
 
+const originalFetch = globalThis.fetch
+
 beforeEach(async () => {
   await AsyncStorage.clear()
   await useAppStore.setState(initialAppState)
 })
 
-async function signIn(role: 'client' | 'pro', jobs: Job[] = []) {
+afterEach(() => {
+  globalThis.fetch = originalFetch
+})
+
+async function signIn(role: 'client' | 'pro', jobs: Job[] = [], username = 'sam') {
   await useAppStore.setState({
-    accounts: { sam: { username: 'sam', role } },
-    session: { username: 'sam', role },
+    accounts: { [username]: { username, role } },
+    session: { username, role },
     jobs,
   })
+}
+
+function mockTodos(todos: DummyTodo[] = []) {
+  globalThis.fetch = jest.fn(async () => ({
+    ok: true,
+    json: async () => ({ todos }),
+  })) as unknown as typeof globalThis.fetch
 }
 
 it('shows a new job after create', async () => {
@@ -130,9 +143,114 @@ it('hides a job created by someone else', async () => {
 })
 
 it('hides the create button for a Pro', async () => {
+  mockTodos()
   await signIn('pro')
   await renderApp('/jobs')
 
   expect(screen.queryByRole('button', { name: 'Create job' })).not.toBeOnTheScreen()
   expect(screen.getByRole('button', { name: 'Log out' })).toBeOnTheScreen()
+})
+
+it('does not request DummyJSON for a client', async () => {
+  const fetchMock = jest.fn()
+  globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch
+  await signIn('client', [makeJob()])
+  await renderApp('/jobs')
+
+  expect(screen.getByText('Fix the sink')).toBeOnTheScreen()
+  expect(fetchMock).not.toHaveBeenCalled()
+})
+
+it('enables Claim only for an open job', async () => {
+  mockTodos()
+  await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+  const user = userEvent.setup()
+
+  await user.press(await screen.findByRole('button', { name: 'Fix the sink' }))
+
+  expect(screen.getByRole('button', { name: 'Claim' })).toBeEnabled()
+  expect(screen.getByRole('button', { name: 'Mark as completed' })).toBeDisabled()
+})
+
+it('updates the job after Claim', async () => {
+  mockTodos()
+  await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+  const user = userEvent.setup()
+
+  await user.press(await screen.findByRole('button', { name: 'Fix the sink' }))
+  await user.press(screen.getByRole('button', { name: 'Claim' }))
+
+  expect(screen.getByText('claimed')).toBeOnTheScreen()
+  expect(screen.getByText('Pro: pat')).toBeOnTheScreen()
+  expect(screen.getByRole('button', { name: 'Claim' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Mark as completed' })).toBeEnabled()
+})
+
+it('disables both actions after finish and leaves the Pro list', async () => {
+  mockTodos()
+  await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+  const user = userEvent.setup()
+
+  await user.press(await screen.findByRole('button', { name: 'Fix the sink' }))
+  await user.press(screen.getByRole('button', { name: 'Claim' }))
+  await user.press(screen.getByRole('button', { name: 'Mark as completed' }))
+
+  expect(screen.getByRole('button', { name: 'Claim' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Mark as completed' })).toBeDisabled()
+  expect(screen.getByText('completed')).toBeOnTheScreen()
+
+  await user.press(screen.getByRole('button', { name: 'Back' }))
+
+  expect(await screen.findByRole('header', { name: 'Jobs' })).toBeOnTheScreen()
+  expect(screen.queryByText('Fix the sink')).not.toBeOnTheScreen()
+})
+
+it('hides a job claimed by someone else', async () => {
+  mockTodos()
+  await signIn('pro', [makeJob({ createdBy: 'sam', status: 'claimed', claimedBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+
+  expect(await screen.findByRole('header', { name: 'No jobs to pick up' })).toBeOnTheScreen()
+  expect(screen.queryByText('Fix the sink')).not.toBeOnTheScreen()
+})
+
+it('shows the skeleton while todos are still loading', async () => {
+  globalThis.fetch = jest.fn(() => new Promise(() => {})) as unknown as typeof globalThis.fetch
+  await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+
+  expect(screen.getByLabelText('Loading jobs')).toBeOnTheScreen()
+  expect(screen.queryByText('Fix the sink')).not.toBeOnTheScreen()
+})
+
+it('keeps local jobs and offers retry when todos fail', async () => {
+  globalThis.fetch = jest.fn().mockRejectedValue(new Error('offline')) as unknown as typeof globalThis.fetch
+  await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+
+  expect(await screen.findByText('Fix the sink')).toBeOnTheScreen()
+  expect(screen.getByText("Couldn't load available jobs.")).toBeOnTheScreen()
+  expect(screen.getByRole('button', { name: 'Retry' })).toBeOnTheScreen()
+})
+
+it('shows the title, status, and creation date on a Pro row', async () => {
+  mockTodos()
+  await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+
+  expect(await screen.findByText('Fix the sink')).toBeOnTheScreen()
+  expect(screen.getByText('open')).toBeOnTheScreen()
+  expect(screen.getByText(createdAtLabel)).toBeOnTheScreen()
+})
+
+it("shows this Pro's claimed job", async () => {
+  mockTodos()
+  await signIn('pro', [makeJob({ createdBy: 'ada', status: 'claimed', claimedBy: 'pat' })], 'pat')
+  await renderApp('/jobs')
+
+  expect(await screen.findByText('Fix the sink')).toBeOnTheScreen()
+  expect(screen.getByText('claimed')).toBeOnTheScreen()
 })
