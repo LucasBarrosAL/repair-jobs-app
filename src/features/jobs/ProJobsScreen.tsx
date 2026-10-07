@@ -1,37 +1,43 @@
-import { StyleSheet, Text, View } from 'react-native'
-import { Button } from '@/components/Button'
-import { jobsForPro } from '@/domain/jobs'
-import { useAppStore } from '@/store/appStore'
-import { useHasHydrated } from '@/store/useHasHydrated'
-import { theme } from '@/theme/tokens'
-import { EmptyJobs } from '@/features/jobs/EmptyJobs'
-import { JobList } from '@/features/jobs/JobList'
-import { JobListSkeleton } from '@/features/jobs/JobListSkeleton'
-import { JobsFrame } from '@/features/jobs/JobsFrame'
-import { useRemoteTodos } from '@/features/jobs/useRemoteTodos'
+import { StyleSheet, Text, View } from "react-native";
+import { Button } from "@/components/Button";
+import { useHasHydrated } from "@/store/useHasHydrated";
+import { theme } from "@/theme/tokens";
+import { EmptyJobs } from "@/features/jobs/components/EmptyJobs";
+import { JobList } from "@/features/jobs/components/JobList";
+import { JobListSkeleton } from "@/features/jobs/JobListSkeleton";
+import { JobsFrame } from "@/features/jobs/components/JobsFrame";
+import { useJobs } from "@/features/jobs/hooks/useJobs";
 
 export function ProJobsScreen() {
-  const session = useAppStore((state) => state.session)
-  const jobs = useAppStore((state) => state.jobs)
-  const hydrated = useHasHydrated()
-  const todosQuery = useRemoteTodos(true)
-  const visibleJobs = session ? jobsForPro(jobs, todosQuery.data ?? [], session.username) : []
-  const showSkeleton = !hydrated || todosQuery.isLoading
+  const hydrated = useHasHydrated();
+  const { jobs, isLoading, isError, isRefetching, refetch } = useJobs();
+  const showSkeleton = !hydrated || isLoading;
 
   return (
     <JobsFrame
       banner={
-        todosQuery.isError ? (
+        isError ? (
           <View style={styles.banner}>
-            <Text style={styles.bannerText}>{"Couldn't load available jobs."}</Text>
-            <Button label="Retry" onPress={() => void todosQuery.refetch()} />
+            <Text style={styles.bannerText}>
+              {"Couldn't load available jobs."}
+            </Text>
+            <Button label="Retry" onPress={() => void refetch()} />
           </View>
         ) : null
       }
     >
-      {showSkeleton ? <JobListSkeleton /> : <JobList jobs={visibleJobs} empty={<EmptyJobs role="pro" />} />}
+      {showSkeleton ? (
+        <JobListSkeleton />
+      ) : (
+        <JobList
+          jobs={jobs}
+          empty={<EmptyJobs role="pro" />}
+          refreshing={isRefetching}
+          onRefresh={() => void refetch()}
+        />
+      )}
     </JobsFrame>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -43,4 +49,4 @@ const styles = StyleSheet.create({
     fontSize: theme.font.body.fontSize,
     lineHeight: theme.font.body.lineHeight,
   },
-})
+});

@@ -1,27 +1,27 @@
-import Ionicons from '@expo/vector-icons/Ionicons'
-import { useRouter } from 'expo-router'
-import { useState } from 'react'
-import type { ReactNode } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useAppStore } from '@/store/appStore'
-import { theme } from '@/theme/tokens'
-import { JobsMenu } from '@/features/jobs/JobsMenu'
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import type { ReactNode } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useAppStore } from "@/store/appStore";
+import { theme } from "@/theme/tokens";
+import { JobsMenu } from "@/features/jobs/components/JobsMenu";
 
 type JobsFrameProps = {
-  children: ReactNode
-  onCreate?: () => void
-  banner?: ReactNode
-}
+  children: ReactNode;
+  onCreate?: () => void;
+  banner?: ReactNode;
+};
 
 export function JobsFrame({ children, onCreate, banner }: JobsFrameProps) {
-  const logout = useAppStore((state) => state.logout)
-  const router = useRouter()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const logout = useAppStore((state) => state.logout);
+  const router = useRouter();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   function onLogout() {
-    logout()
-    router.replace('/')
+    logout();
+    router.replace("/");
   }
 
   return (
@@ -49,13 +49,17 @@ export function JobsFrame({ children, onCreate, banner }: JobsFrameProps) {
               <Ionicons name="add" size={28} color={theme.color.primary} />
             </Pressable>
           ) : null}
-          <JobsMenu open={menuOpen} onToggle={() => setMenuOpen((open) => !open)} onLogout={onLogout} />
+          <JobsMenu
+            open={menuOpen}
+            onToggle={() => setMenuOpen((open) => !open)}
+            onLogout={onLogout}
+          />
         </View>
       </View>
       {banner}
       {children}
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -72,9 +76,9 @@ const styles = StyleSheet.create({
   header: {
     zIndex: 2,
     minHeight: theme.controlHeight,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: theme.space.md,
   },
   title: {
@@ -83,14 +87,14 @@ const styles = StyleSheet.create({
     lineHeight: theme.font.title.lineHeight,
   },
   actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: theme.space.sm,
   },
   iconButton: {
     width: theme.controlHeight,
     minHeight: theme.controlHeight,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-})
+});

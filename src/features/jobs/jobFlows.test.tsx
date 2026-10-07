@@ -249,6 +249,23 @@ it('keeps local jobs and offers retry when todos fail', async () => {
   expect(screen.getByRole('button', { name: 'Retry' })).toBeOnTheScreen()
 })
 
+it('refetches DummyJSON when the list is pulled', async () => {
+  const fetchMock = jest.fn(async () => ({
+    ok: true,
+    json: async () => ({ todos: [] }),
+  }))
+  globalThis.fetch = fetchMock as unknown as typeof globalThis.fetch
+  await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')
+  await renderApp('/jobs')
+
+  expect(await screen.findByText('Fix the sink')).toBeOnTheScreen()
+  expect(fetchMock).toHaveBeenCalledTimes(1)
+
+  screen.getByTestId('job-list').props.refreshControl.props.onRefresh()
+
+  expect(fetchMock).toHaveBeenCalledTimes(2)
+})
+
 it('shows the title, status, and creation date on a Pro row', async () => {
   mockTodos()
   await signIn('pro', [makeJob({ createdBy: 'ada' })], 'pat')

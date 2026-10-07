@@ -1,30 +1,23 @@
 import { Button } from "@/components/Button";
-import { jobsForPro } from "@/domain/jobs";
-import type { DummyTodo, Job } from "@/domain/types";
 import { useAppStore } from "@/store/appStore";
-import { JobUnavailable } from "@/features/jobs/JobUnavailable";
-import { useJobId } from "@/features/jobs/useJobId";
-import { useRemoteTodos } from "@/features/jobs/useRemoteTodos";
+import { JobUnavailable } from "@/features/jobs/components/JobUnavailable";
+import { useJobId } from "@/features/jobs/hooks/useJobId";
+import { useJobs } from "@/features/jobs/hooks/useJobs";
 import { JobDetailsBody } from "./JobDetailsBody";
 
 export function ProJobDetailsScreen() {
   const jobId = useJobId();
   const session = useAppStore((state) => state.session);
-  const jobs = useAppStore((state) => state.jobs);
   const claimJob = useAppStore((state) => state.claimJob);
   const completeJob = useAppStore((state) => state.completeJob);
-  const todosQuery = useRemoteTodos(true);
-  const job = session
-    ? jobForPro(jobs, todosQuery.data ?? [], session.username, jobId)
-    : undefined;
+  const { findJob, todoFor } = useJobs();
+  const job = findJob(jobId);
 
   function onClaim() {
     if (!job) {
       return;
     }
-    const todo =
-      todosQuery.data?.find((item) => `remote_${item.id}` === job.id) ?? null;
-    claimJob(job.id, todo);
+    claimJob(job.id, todoFor(job.id));
   }
 
   function onComplete() {
@@ -58,30 +51,5 @@ export function ProJobDetailsScreen() {
         </>
       }
     />
-  );
-}
-
-function jobForPro(
-  jobs: Job[],
-  todos: DummyTodo[],
-  username: string,
-  jobId: string | undefined,
-): Job | undefined {
-  if (!jobId) {
-    return undefined;
-  }
-
-  const listed = jobsForPro(jobs, todos, username).find(
-    (item) => item.id === jobId,
-  );
-  if (listed) {
-    return listed;
-  }
-
-  return jobs.find(
-    (item) =>
-      item.id === jobId &&
-      item.claimedBy === username &&
-      item.status === "completed",
   );
 }

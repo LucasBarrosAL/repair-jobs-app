@@ -251,6 +251,40 @@ it('replaces a todo with the local job when that id is already stored', () => {
   expect(jobsForPro(jobs, todos, 'cara').find((item) => item.id === 'remote_5')?.title).toBe('Oil hinge')
 })
 
+it('lists local jobs before DummyJSON jobs', () => {
+  const olderLocal = job({
+    id: 'local_old',
+    createdBy: 'ada',
+    createdAt: '2024-06-01T00:00:00.000Z',
+  })
+  const newerLocal = job({
+    id: 'local_new',
+    createdBy: 'ada',
+    createdAt: '2026-10-07T18:00:00.000Z',
+  })
+  const claimedRemote = job({
+    id: 'remote_3',
+    title: 'Paint door',
+    description: 'Repair job 3',
+    createdBy: 'client-3',
+    status: 'claimed',
+    claimedBy: 'pat',
+    createdAt: '2024-01-04T00:00:00.000Z',
+  })
+  const todos: DummyTodo[] = [
+    { id: 1, todo: 'Do laundry', completed: false, userId: 1 },
+    { id: 7, todo: 'Paint door', completed: false, userId: 26 },
+  ]
+
+  expect(jobsForPro([newerLocal, claimedRemote, olderLocal], todos, 'pat').map((item) => item.id)).toEqual([
+    'local_old',
+    'local_new',
+    'remote_1',
+    'remote_3',
+    'remote_7',
+  ])
+})
+
 it('writes one local job when a todo is claimed', () => {
   const materialized = materializeRemoteJob(paintDoor)
   const jobs = claimJob([], 'remote_7', 'ben', paintDoor)
