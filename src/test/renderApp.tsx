@@ -29,10 +29,12 @@ export async function renderApp(initialUrl = '/', options: RenderAppOptions = {}
     },
   })
 
-  return renderRouter('src/app', {
+  const rendered = renderRouter('src/app', {
     initialUrl,
     wrapper: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     ),
   })
+
+  return rendered
 }

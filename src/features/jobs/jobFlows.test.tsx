@@ -142,6 +142,15 @@ it('hides a job created by someone else', async () => {
   expect(screen.queryByText('Paint door')).not.toBeOnTheScreen()
 })
 
+it('sends a Pro away from the create screen', async () => {
+  mockTodos()
+  await signIn('pro')
+  await renderApp('/jobs/create')
+
+  expect(await screen.findByRole('header', { name: 'Jobs' })).toBeOnTheScreen()
+  expect(screen.queryByRole('header', { name: 'New job' })).not.toBeOnTheScreen()
+})
+
 it('hides the create button for a Pro', async () => {
   mockTodos()
   await signIn('pro')

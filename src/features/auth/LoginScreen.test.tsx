@@ -79,6 +79,12 @@ it('resets the selector to Client after leaving a saved username', async () => {
   expect(screen.getByRole('radio', { name: 'Pro' })).toBeEnabled()
 })
 
+it('shows Login when jobs is opened without a session', async () => {
+  await renderApp('/jobs')
+
+  expect(await screen.findByLabelText('Username')).toBeOnTheScreen()
+})
+
 it('opens Jobs when a session already exists', async () => {
   await useAppStore.setState({
     accounts: { sam: { username: 'sam', role: 'client' } },

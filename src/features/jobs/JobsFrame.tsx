@@ -1,34 +1,23 @@
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
+import type { ReactNode } from 'react'
+import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Button } from '@/components/Button'
-import { jobsForClient, jobsForPro } from '@/domain/jobs'
 import { useAppStore } from '@/store/appStore'
-import { useHasHydrated } from '@/store/useHasHydrated'
 import { theme } from '@/theme/tokens'
-import { EmptyJobs } from '@/features/jobs/EmptyJobs'
-import { JobListSkeleton } from '@/features/jobs/JobListSkeleton'
-import { JobRow } from '@/features/jobs/JobRow'
 import { JobsMenu } from '@/features/jobs/JobsMenu'
-import { useRemoteTodos } from '@/features/jobs/useRemoteTodos'
 
-export function JobsScreen() {
-  const session = useAppStore((state) => state.session)
-  const jobs = useAppStore((state) => state.jobs)
+type JobsFrameProps = {
+  children: ReactNode
+  onCreate?: () => void
+  banner?: ReactNode
+}
+
+export function JobsFrame({ children, onCreate, banner }: JobsFrameProps) {
   const logout = useAppStore((state) => state.logout)
-  const hydrated = useHasHydrated()
   const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
-  const isPro = session?.role === 'pro'
-  const todosQuery = useRemoteTodos(isPro)
-  const visibleJobs = !session
-    ? []
-    : session.role === 'client'
-      ? jobsForClient(jobs, session.username)
-      : jobsForPro(jobs, todosQuery.data ?? [], session.username)
-  const showSkeleton = !hydrated || (isPro && todosQuery.isLoading)
 
   function onLogout() {
     logout()
@@ -50,11 +39,11 @@ export function JobsScreen() {
           Jobs
         </Text>
         <View style={styles.actions}>
-          {session?.role === 'client' ? (
+          {onCreate ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Create job"
-              onPress={() => router.push('/jobs/create')}
+              onPress={onCreate}
               style={styles.iconButton}
             >
               <Ionicons name="add" size={28} color={theme.color.primary} />
@@ -63,23 +52,8 @@ export function JobsScreen() {
           <JobsMenu open={menuOpen} onToggle={() => setMenuOpen((open) => !open)} onLogout={onLogout} />
         </View>
       </View>
-      {isPro && todosQuery.isError ? (
-        <View style={styles.banner}>
-          <Text style={styles.bannerText}>{"Couldn't load available jobs."}</Text>
-          <Button label="Retry" onPress={() => void todosQuery.refetch()} />
-        </View>
-      ) : null}
-      {showSkeleton ? (
-        <JobListSkeleton />
-      ) : (
-        <FlatList
-          data={visibleJobs}
-          keyExtractor={(job) => job.id}
-          renderItem={({ item }) => <JobRow job={item} onPress={() => router.push(`/jobs/${item.id}`)} />}
-          ListEmptyComponent={session ? <EmptyJobs role={session.role} /> : null}
-          contentContainerStyle={visibleJobs.length === 0 ? styles.emptyList : styles.list}
-        />
-      )}
+      {banner}
+      {children}
     </SafeAreaView>
   )
 }
@@ -118,19 +92,5 @@ const styles = StyleSheet.create({
     minHeight: theme.controlHeight,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  list: {
-    paddingBottom: theme.space.lg,
-  },
-  emptyList: {
-    flexGrow: 1,
-  },
-  banner: {
-    gap: theme.space.sm,
-  },
-  bannerText: {
-    color: theme.color.errorText,
-    fontSize: theme.font.body.fontSize,
-    lineHeight: theme.font.body.lineHeight,
   },
 })

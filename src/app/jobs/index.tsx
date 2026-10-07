@@ -1,1 +1,1 @@
-export { JobsScreen as default } from '@/features/jobs/JobsScreen'
+export { JobsRoute as default } from '@/features/jobs/JobsRoute'
