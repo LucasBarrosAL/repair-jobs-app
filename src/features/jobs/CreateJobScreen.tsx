@@ -5,11 +5,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button } from '@/components/Button'
 import { TextField } from '@/components/TextField'
-import { useAppStore } from '@/store/appStore'
+import { useCreateJob } from '@/features/jobs/hooks/useJobMutations'
 import { theme } from '@/theme/tokens'
 
 export function CreateJobScreen() {
-  const createJob = useAppStore((state) => state.createJob)
+  const createJob = useCreateJob()
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -30,8 +30,8 @@ export function CreateJobScreen() {
     }
   }
 
-  function onCreate() {
-    const result = createJob(title, description)
+  async function onCreate() {
+    const result = await createJob.mutateAsync({ title, description })
     if (!result.ok) {
       setError(result.message)
       return
@@ -51,7 +51,7 @@ export function CreateJobScreen() {
       </View>
       <TextField label="Title" value={title} onChangeText={onTitleChange} error={error} />
       <TextField label="Description" value={description} onChangeText={setDescription} multiline />
-      <Button label="Create job" onPress={onCreate} />
+      <Button label="Create job" onPress={() => void onCreate()} />
     </SafeAreaView>
   )
 }

@@ -1,5 +1,6 @@
 import type { DummyTodo, Job, Session } from '@/domain/types'
-import { useVisibleJobs } from '@/features/jobs/hooks/useVisibleJobs'
+import { useJobsQuery } from '@/features/jobs/hooks/useJobs'
+import { useAppStore } from '@/store/appStore'
 
 export type JobActionState = 'hidden' | 'enabled' | 'disabled'
 
@@ -16,8 +17,11 @@ const hiddenActions: JobDetailsActions = {
 }
 
 export function useJobDetails(jobId: string | undefined) {
-  const { session, storedJobs, jobs, todos } = useVisibleJobs()
-  const job = findJob(session, storedJobs, jobs, jobId)
+  const session = useAppStore((state) => state.session)
+  const storedJobs = useAppStore((state) => state.jobs)
+  const query = useJobsQuery()
+  const todos = query.data?.todos ?? []
+  const job = findJob(session, storedJobs, query.data?.jobs ?? [], jobId)
 
   return {
     job,

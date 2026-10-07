@@ -40,13 +40,18 @@ async function signIn(role: 'client' | 'pro', jobs: Job[] = [], username = 'sam'
 }
 
 function mockTodos(todos: DummyTodo[] = []) {
-  globalThis.fetch = jest.fn(async () => ({
-    ok: true,
-    json: async () => ({ todos }),
-  })) as unknown as typeof globalThis.fetch
+  globalThis.fetch = jest.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+    const method = init?.method ?? 'GET'
+    if (method === 'GET') {
+      return { ok: true, json: async () => ({ todos }) }
+    }
+    const payload = typeof init?.body === 'string' ? JSON.parse(init.body) : {}
+    return { ok: true, json: async () => payload }
+  }) as unknown as typeof globalThis.fetch
 }
 
 it('shows a new job after create', async () => {
+  mockTodos()
   await signIn('client')
   await renderApp('/jobs')
   const user = userEvent.setup()
@@ -72,6 +77,7 @@ it('shows an error when the title is blank', async () => {
 })
 
 it('returns to Jobs after deleting an unclaimed job', async () => {
+  mockTodos()
   await signIn('client', [makeJob()])
   await renderApp('/jobs')
   const user = userEvent.setup()

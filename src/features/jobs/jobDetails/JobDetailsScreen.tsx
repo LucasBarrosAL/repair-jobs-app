@@ -1,8 +1,8 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Button } from "@/components/Button";
-import { useAppStore } from "@/store/appStore";
 import { JobUnavailable } from "@/features/jobs/components/JobUnavailable";
+import { useClaimJob, useCompleteJob, useDeleteJob } from "@/features/jobs/hooks/useJobMutations";
 import { useJobDetails } from "@/features/jobs/hooks/useJobDetails";
 import { useJobId } from "@/features/jobs/hooks/useJobId";
 import { JobDetailsBody } from "./JobDetailsBody";
@@ -10,17 +10,17 @@ import { JobDetailsBody } from "./JobDetailsBody";
 export function JobDetailsScreen() {
   const jobId = useJobId();
   const { job, todo, actions } = useJobDetails(jobId);
-  const deleteJob = useAppStore((state) => state.deleteJob);
-  const claimJob = useAppStore((state) => state.claimJob);
-  const completeJob = useAppStore((state) => state.completeJob);
+  const deleteJob = useDeleteJob();
+  const claimJob = useClaimJob();
+  const completeJob = useCompleteJob();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
-  function onDelete() {
+  async function onDelete() {
     if (!job) {
       return;
     }
-    const result = deleteJob(job.id);
+    const result = await deleteJob.mutateAsync(job);
     if (!result.ok) {
       setError(result.message);
       return;
@@ -28,18 +28,24 @@ export function JobDetailsScreen() {
     router.replace("/jobs");
   }
 
-  function onClaim() {
+  async function onClaim() {
     if (!job) {
       return;
     }
-    claimJob(job.id, todo);
+    const result = await claimJob.mutateAsync({ job, todo });
+    if (!result.ok) {
+      setError(result.message);
+    }
   }
 
-  function onComplete() {
+  async function onComplete() {
     if (!job) {
       return;
     }
-    completeJob(job.id);
+    const result = await completeJob.mutateAsync(job);
+    if (!result.ok) {
+      setError(result.message);
+    }
   }
 
   if (!job) {
@@ -53,15 +59,20 @@ export function JobDetailsScreen() {
       actions={
         <>
           {actions.delete !== "hidden" ? (
-            <Button label="Delete" variant="destructive" onPress={onDelete} disabled={actions.delete === "disabled"} />
+            <Button
+              label="Delete"
+              variant="destructive"
+              onPress={() => void onDelete()}
+              disabled={actions.delete === "disabled"}
+            />
           ) : null}
           {actions.claim !== "hidden" ? (
-            <Button label="Claim" onPress={onClaim} disabled={actions.claim === "disabled"} />
+            <Button label="Claim" onPress={() => void onClaim()} disabled={actions.claim === "disabled"} />
           ) : null}
           {actions.complete !== "hidden" ? (
             <Button
               label="Mark as completed"
-              onPress={onComplete}
+              onPress={() => void onComplete()}
               disabled={actions.complete === "disabled"}
             />
           ) : null}
