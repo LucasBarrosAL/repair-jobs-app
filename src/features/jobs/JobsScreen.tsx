@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRouter } from 'expo-router'
+import { useState } from 'react'
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Button } from '@/components/Button'
@@ -10,6 +11,7 @@ import { theme } from '@/theme/tokens'
 import { EmptyJobs } from '@/features/jobs/EmptyJobs'
 import { JobListSkeleton } from '@/features/jobs/JobListSkeleton'
 import { JobRow } from '@/features/jobs/JobRow'
+import { JobsMenu } from '@/features/jobs/JobsMenu'
 import { useRemoteTodos } from '@/features/jobs/useRemoteTodos'
 
 export function JobsScreen() {
@@ -18,6 +20,7 @@ export function JobsScreen() {
   const logout = useAppStore((state) => state.logout)
   const hydrated = useHasHydrated()
   const router = useRouter()
+  const [menuOpen, setMenuOpen] = useState(false)
   const isPro = session?.role === 'pro'
   const todosQuery = useRemoteTodos(isPro)
   const visibleJobs = !session
@@ -34,6 +37,14 @@ export function JobsScreen() {
 
   return (
     <SafeAreaView style={styles.screen}>
+      {menuOpen ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close menu"
+          onPress={() => setMenuOpen(false)}
+          style={styles.backdrop}
+        />
+      ) : null}
       <View style={styles.header}>
         <Text accessibilityRole="header" style={styles.title}>
           Jobs
@@ -49,9 +60,7 @@ export function JobsScreen() {
               <Ionicons name="add" size={28} color={theme.color.primary} />
             </Pressable>
           ) : null}
-          <Pressable accessibilityRole="button" accessibilityLabel="Log out" onPress={onLogout} style={styles.logout}>
-            <Text style={styles.logoutLabel}>Log out</Text>
-          </Pressable>
+          <JobsMenu open={menuOpen} onToggle={() => setMenuOpen((open) => !open)} onLogout={onLogout} />
         </View>
       </View>
       {isPro && todosQuery.isError ? (
@@ -82,7 +91,12 @@ const styles = StyleSheet.create({
     padding: theme.screenPadding,
     gap: theme.space.md,
   },
+  backdrop: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 1,
+  },
   header: {
+    zIndex: 2,
     minHeight: theme.controlHeight,
     flexDirection: 'row',
     alignItems: 'center',
@@ -104,15 +118,6 @@ const styles = StyleSheet.create({
     minHeight: theme.controlHeight,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logout: {
-    minHeight: theme.controlHeight,
-    justifyContent: 'center',
-  },
-  logoutLabel: {
-    color: theme.color.primary,
-    fontSize: theme.font.button.fontSize,
-    lineHeight: theme.font.button.lineHeight,
   },
   list: {
     paddingBottom: theme.space.lg,

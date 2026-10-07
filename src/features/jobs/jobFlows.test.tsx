@@ -147,7 +147,11 @@ it('hides the create button for a Pro', async () => {
   await signIn('pro')
   await renderApp('/jobs')
 
+  const user = userEvent.setup()
+
   expect(screen.queryByRole('button', { name: 'Create job' })).not.toBeOnTheScreen()
+  expect(screen.queryByRole('button', { name: 'Log out' })).not.toBeOnTheScreen()
+  await user.press(screen.getByRole('button', { name: 'Settings' }))
   expect(screen.getByRole('button', { name: 'Log out' })).toBeOnTheScreen()
 })
 

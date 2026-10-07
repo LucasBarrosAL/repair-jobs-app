@@ -56,6 +56,7 @@ it('returns to an empty Login after logout', async () => {
   })
   await renderApp('/jobs')
   const user = userEvent.setup()
+  await user.press(screen.getByRole('button', { name: 'Settings' }))
   await user.press(screen.getByRole('button', { name: 'Log out' }))
 
   expect(screen.getByLabelText('Username')).toHaveDisplayValue('')
