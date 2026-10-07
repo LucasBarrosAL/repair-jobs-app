@@ -134,7 +134,6 @@ async function deleteJobOnServer(queryClient: QueryClient, job: Job): Promise<Mu
 async function sendJobUpdate(job: Job, completed: boolean): Promise<void> {
   const remoteId = remoteTodoId(job.id)
   if (remoteId === null) {
-    await addTodo(job.title, completed)
     return
   }
   await updateTodo(remoteId, completed)
@@ -143,7 +142,6 @@ async function sendJobUpdate(job: Job, completed: boolean): Promise<void> {
 async function sendJobDelete(job: Job): Promise<void> {
   const remoteId = remoteTodoId(job.id)
   if (remoteId === null) {
-    await addTodo(job.title, false)
     return
   }
   await deleteTodo(remoteId)
