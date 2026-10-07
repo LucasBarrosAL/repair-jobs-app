@@ -1,13 +1,14 @@
-import { Pressable, StyleSheet, Text } from "react-native";
-import { theme } from "@/theme/tokens";
+import { Pressable, StyleSheet, Text } from 'react-native'
+import { theme } from '@/theme/tokens'
 
 type ButtonProps = {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-};
+  label: string
+  onPress: () => void
+  disabled?: boolean
+  variant?: 'primary' | 'destructive'
+}
 
-export function Button({ label, onPress, disabled = false }: ButtonProps) {
+export function Button({ label, onPress, disabled = false, variant = 'primary' }: ButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -17,28 +18,21 @@ export function Button({ label, onPress, disabled = false }: ButtonProps) {
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        disabled ? styles.disabled : styles.primary,
-        pressed && !disabled && styles.pressed,
+        disabled ? styles.disabled : variant === 'destructive' ? styles.destructive : styles.primary,
+        pressed && !disabled && (variant === 'destructive' ? styles.destructivePressed : styles.pressed),
       ]}
     >
-      <Text
-        style={[
-          styles.label,
-          disabled ? styles.disabledLabel : styles.enabledLabel,
-        ]}
-      >
-        {label}
-      </Text>
+      <Text style={[styles.label, disabled ? styles.disabledLabel : styles.enabledLabel]}>{label}</Text>
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   base: {
     minHeight: theme.controlHeight,
     borderRadius: theme.radius.button,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: theme.space.lg,
   },
   primary: {
@@ -46,6 +40,12 @@ const styles = StyleSheet.create({
   },
   pressed: {
     backgroundColor: theme.color.primaryPressed,
+  },
+  destructive: {
+    backgroundColor: theme.color.destructive,
+  },
+  destructivePressed: {
+    backgroundColor: theme.color.destructivePressed,
   },
   disabled: {
     backgroundColor: theme.color.disabledFill,
@@ -60,4 +60,4 @@ const styles = StyleSheet.create({
   disabledLabel: {
     color: theme.color.disabledText,
   },
-});
+})

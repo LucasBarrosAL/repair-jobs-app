@@ -1,9 +1,9 @@
 import { StyleSheet, View } from 'react-native'
 import { theme } from '@/theme/tokens'
 
-export function LoadingPlaceholder() {
+export function JobListSkeleton() {
   return (
-    <View accessibilityRole="progressbar" accessibilityLabel="Loading jobs" style={styles.screen}>
+    <View accessibilityRole="progressbar" accessibilityLabel="Loading jobs" style={styles.list}>
       <View style={styles.row} />
       <View style={styles.row} />
       <View style={styles.row} />
@@ -12,11 +12,7 @@ export function LoadingPlaceholder() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: theme.color.background,
-    padding: theme.screenPadding,
-    justifyContent: 'center',
+  list: {
     gap: theme.space.md,
   },
   row: {

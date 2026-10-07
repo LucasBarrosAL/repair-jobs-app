@@ -8,6 +8,8 @@ type TextFieldProps = {
   onChangeText: (value: string) => void
   autoCapitalize?: TextInputProps['autoCapitalize']
   autoCorrect?: boolean
+  multiline?: boolean
+  error?: string | null
 }
 
 export function TextField({
@@ -16,6 +18,8 @@ export function TextField({
   onChangeText,
   autoCapitalize = 'sentences',
   autoCorrect = true,
+  multiline = false,
+  error,
 }: TextFieldProps) {
   return (
     <View style={styles.field}>
@@ -26,8 +30,10 @@ export function TextField({
         onChangeText={onChangeText}
         autoCapitalize={autoCapitalize}
         autoCorrect={autoCorrect}
-        style={styles.input}
+        multiline={multiline}
+        style={[styles.input, multiline && styles.multiline]}
       />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   )
 }
@@ -51,5 +57,15 @@ const styles = StyleSheet.create({
     fontSize: theme.font.body.fontSize,
     lineHeight: theme.font.body.lineHeight,
     paddingHorizontal: theme.space.md,
+  },
+  multiline: {
+    minHeight: 96,
+    paddingVertical: theme.space.md,
+    textAlignVertical: 'top',
+  },
+  error: {
+    color: theme.color.errorText,
+    fontSize: theme.font.body.fontSize,
+    lineHeight: theme.font.body.lineHeight,
   },
 })
