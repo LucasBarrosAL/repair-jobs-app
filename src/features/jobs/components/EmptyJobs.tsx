@@ -1,25 +1,12 @@
 import { Image, StyleSheet, Text, View } from "react-native";
-import type { Role } from "@/domain/types";
 import { theme } from "@/theme/tokens";
 
-const copy: Record<Role, { heading: string; body: string }> = {
-  client: {
-    heading: "No jobs yet",
-    body: "Create a repair job to get started.",
-  },
-  pro: {
-    heading: "No jobs to pick up",
-    body: "New repair jobs will show up here.",
-  },
-};
-
 type EmptyJobsProps = {
-  role: Role;
+  heading: string;
+  body: string;
 };
 
-export function EmptyJobs({ role }: EmptyJobsProps) {
-  const message = copy[role];
-
+export function EmptyJobs({ heading, body }: EmptyJobsProps) {
   return (
     <View style={styles.empty}>
       <Image
@@ -28,9 +15,9 @@ export function EmptyJobs({ role }: EmptyJobsProps) {
         accessible={false}
       />
       <Text accessibilityRole="header" style={styles.heading}>
-        {message.heading}
+        {heading}
       </Text>
-      <Text style={styles.body}>{message.body}</Text>
+      <Text style={styles.body}>{body}</Text>
     </View>
   );
 }
