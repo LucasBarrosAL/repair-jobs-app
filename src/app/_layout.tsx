@@ -3,6 +3,7 @@ import { Stack } from 'expo-router'
 import { AppState } from 'react-native'
 import type { AppStateStatus } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { SessionGate } from '@/features/shell/SessionGate'
 
 focusManager.setEventListener((handleFocus) => {
   const subscription = AppState.addEventListener('change', (status: AppStateStatus) => {
@@ -27,7 +28,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <SessionGate>
+          <Stack screenOptions={{ headerShown: false }} />
+        </SessionGate>
       </QueryClientProvider>
     </SafeAreaProvider>
   )

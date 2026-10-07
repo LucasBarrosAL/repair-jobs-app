@@ -1,3 +1,1 @@
-import { PlaceholderScreen } from '@/features/shell/PlaceholderScreen'
-
-export default PlaceholderScreen
+export { LoginScreen as default } from '@/features/auth/LoginScreen'
