@@ -4,7 +4,6 @@ import { useContext, useEffect } from 'react'
 import { AppState } from 'react-native'
 import type { AppStateStatus } from 'react-native'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { currentPathname } from '@/features/shell/currentPathname'
 import { SessionGate } from '@/features/shell/SessionGate'
 import { useAppStore } from '@/store/appStore'
 
@@ -46,7 +45,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const session = useAppStore((state) => state.session)
-  const pathname = currentPathname(usePathname())
+  const pathname = usePathname()
   const router = useRouter()
   const onJobs = pathname === '/jobs' || pathname.startsWith('/jobs/')
 

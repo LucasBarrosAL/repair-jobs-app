@@ -426,7 +426,7 @@ npx create-expo-app@latest repair-jobs-tmp --template blank-typescript
 - Set `main` to `expo-router/entry`. Add the router install set with `npx expo install`: `expo-router`, `react-native-safe-area-context`, `react-native-screens`, `expo-linking`, `expo-constants`, `expo-status-bar`, and `@react-native-async-storage/async-storage`.
 - Install the pinned TanStack Query, Zustand, Jest, RNTL, `react-test-renderer`, `@types/jest`, ESLint, and `eslint-config-expo` versions from the table.
 - Keep the template TypeScript at `~6.0.3`. Leave TypeScript 7 uninstalled.
-- `app.json`: name `Repair Jobs`, scheme `repairjobs`, `experiments.typedRoutes` enabled, and Metro as the web bundler.
+- `app.json`: name `Repair Jobs`, scheme `repairjobs`, and `experiments.typedRoutes` enabled.
 - `tsconfig` extends `expo/tsconfig.base`, with `strict` and the `@/*` path to `./src/*`.
 - ESLint uses the SDK 57 flat config from `eslint-config-expo`. Enable `@typescript-eslint/consistent-type-imports`.
 - Jest uses the `jest-expo` preset and `src/test/setup.ts`. The setup mocks AsyncStorage with the package's Jest mock.
@@ -708,6 +708,6 @@ File: `src/features/jobs/jobFlows.test.tsx`. The job's `createdAt` is `2026-10-0
 - Editing a job, passwords, and a backend account system.
 - POST, PUT, and DELETE to DummyJSON.
 - Sync across devices.
-- A designed web layout. The Metro web bundler is configured so Expo can run; the UI is for the phone.
+- A web app. The UI is for the phone.
 - Pull to refresh, beyond the Retry button on a failed Pro request.
 - A confirmation dialog before delete or finish.

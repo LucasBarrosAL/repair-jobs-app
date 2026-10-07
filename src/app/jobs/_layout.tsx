@@ -1,11 +1,10 @@
 import { Stack, usePathname, useRouter } from 'expo-router'
 import { useEffect } from 'react'
-import { currentPathname } from '@/features/shell/currentPathname'
 import { useAppStore } from '@/store/appStore'
 
 export default function JobsLayout() {
   const role = useAppStore((state) => state.session?.role)
-  const pathname = currentPathname(usePathname())
+  const pathname = usePathname()
   const router = useRouter()
   const blockCreate = role !== 'client' && (pathname === '/jobs/create' || pathname.startsWith('/jobs/create/'))
 
